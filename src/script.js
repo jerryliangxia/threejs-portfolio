@@ -3,11 +3,49 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import GUI from "lil-gui";
 import { gsap } from "gsap";
 
-const image = new Image();
-image.onload = () => {
-  console.log("image loaded");
+const loadingManager = new THREE.LoadingManager();
+loadingManager.onStart = () => {
+  console.log("loading started");
 };
-image.src = "/textures/door/color.jpg";
+loadingManager.onLoad = () => {
+  console.log("loading finished");
+};
+loadingManager.onProgress = () => {
+  console.log("loading progressing");
+};
+loadingManager.onError = () => {
+  console.log("loading error");
+};
+
+const textureLoader = new THREE.TextureLoader(loadingManager);
+const colorTexture = textureLoader.load("/textures/minecraft.png");
+colorTexture.colorSpace = THREE.SRGBColorSpace;
+// colorTexture.repeat.x = 2;
+// colorTexture.repeat.y = 3;
+colorTexture.wrapS = THREE.RepeatWrapping;
+colorTexture.wrapT = THREE.RepeatWrapping;
+colorTexture.wrapS = THREE.MirroredRepeatWrapping;
+colorTexture.wrapT = THREE.MirroredRepeatWrapping;
+// colorTexture.offset.x = 0.5;
+// colorTexture.offset.y = 0.5;
+// colorTexture.rotation = Math.PI * 0.25;
+colorTexture.colorSpace = THREE.SRGBColorSpace;
+// colorTexture.rotation = Math.PI * 0.25;
+colorTexture.center.x = 0.5;
+colorTexture.center.y = 0.5;
+// Cheaper than other filters
+colorTexture.generateMipmaps = false; // THREE.NearestFilter doesn't need mipmaps
+colorTexture.minFilter = THREE.NearestFilter;
+colorTexture.magFilter = THREE.NearestFilter;
+
+const alphaTexture = textureLoader.load("/textures/door/alpha.jpg");
+const heightTexture = textureLoader.load("/textures/door/height.jpg");
+const normalTexture = textureLoader.load("/textures/door/normal.jpg");
+const ambientOcclusionTexture = textureLoader.load(
+  "/textures/door/ambientOcclusion.jpg"
+);
+const metalnessTexture = textureLoader.load("/textures/door/metalness.jpg");
+const roughnessTexture = textureLoader.load("/textures/door/roughness.jpg");
 
 /**
  * Debug
@@ -44,10 +82,8 @@ scene.add(axesHelper);
 
 // Create a BoxGeometry
 const geometry = new THREE.BoxGeometry(1, 1, 1, 2, 2, 2);
-const material = new THREE.MeshBasicMaterial({
-  color: "#9c7fe3",
-  wireframe: true,
-});
+console.log(geometry.attributes.uv);
+const material = new THREE.MeshBasicMaterial({ map: colorTexture });
 const mesh = new THREE.Mesh(geometry, material);
 
 // GUI for Cube
@@ -82,8 +118,8 @@ cubeTweaks
 mesh.position.x = 0;
 mesh.position.y = 0;
 mesh.position.z = 0;
-mesh.rotation.x = Math.PI * 0.25;
-mesh.rotation.y = Math.PI * 0.25;
+// mesh.rotation.x = Math.PI * 0.25;
+// mesh.rotation.y = Math.PI * 0.25;
 scene.add(mesh);
 
 // Sizes
