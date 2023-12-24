@@ -114,32 +114,36 @@ const scene = new THREE.Scene();
 // material.gradientMap = gradientTexture;
 // gradientTexture.generateMipmaps = false;
 
+const material = new THREE.MeshPhysicalMaterial();
+material.metalness = 0;
+material.roughness = 0;
+
 // MeshStandardMaterial
 // const material = new THREE.MeshStandardMaterial();
-const material = new THREE.MeshPhysicalMaterial();
+// const material = new THREE.MeshPhysicalMaterial();
 
-material.metalness = 1;
-material.roughness = 1;
+// material.metalness = 1;
+// material.roughness = 1;
 
-material.map = doorColorTexture;
+// material.map = doorColorTexture;
 
-material.metalnessMap = doorMetalnessTexture;
-material.roughnessMap = doorRoughnessTexture;
+// material.metalnessMap = doorMetalnessTexture;
+// material.roughnessMap = doorRoughnessTexture;
 
-gui.add(material, "metalness").min(0).max(1).step(0.0001);
-gui.add(material, "roughness").min(0).max(1).step(0.0001);
+// gui.add(material, "metalness").min(0).max(1).step(0.0001);
+// gui.add(material, "roughness").min(0).max(1).step(0.0001);
 
-material.aoMap = doorAmbientOcclusionTexture;
-material.aoMapIntensity = 1;
+// material.aoMap = doorAmbientOcclusionTexture;
+// material.aoMapIntensity = 1;
 
-material.displacementMap = doorHeightTexture;
-material.displacementScale = 0.1;
+// material.displacementMap = doorHeightTexture;
+// material.displacementScale = 0.1;
 
-material.normalMap = doorNormalTexture;
-material.normalScale.set(0.5, 0.5);
+// material.normalMap = doorNormalTexture;
+// material.normalScale.set(0.5, 0.5);
 
-material.transparent = true;
-material.alphaMap = doorAlphaTexture;
+// material.transparent = true;
+// material.alphaMap = doorAlphaTexture;
 
 // // Clearcoat
 // material.clearcoat = 1;
