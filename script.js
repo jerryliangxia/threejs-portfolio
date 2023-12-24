@@ -1,6 +1,28 @@
-// import "./style.css";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import GUI from "lil-gui";
+import { gsap } from "gsap";
+
+/**
+ * Debug
+ */
+const gui = new GUI({
+  width: 300,
+  title: "Nice debug UI",
+  closeFolders: true,
+});
+
+// Hiding the GUI
+window.addEventListener("keydown", (event) => {
+  if (event.key == "h") gui.show(gui._hidden);
+});
+
+// Create an object so we can store variables
+const debugObject = {};
+debugObject.color = "#3a6ea6";
+// Create a folder for lil-gui
+const cubeTweaks = gui.addFolder("Awesome cube");
+cubeTweaks.close(); // Close by default
 
 // Canvas
 const canvas = document.querySelector("canvas.webgl");
@@ -14,24 +36,40 @@ const scene = new THREE.Scene();
 const axesHelper = new THREE.AxesHelper(2);
 scene.add(axesHelper);
 
-// Create an empty BufferGeometry
-const geometry = new THREE.BufferGeometry();
-
-// Create 50 triangles (450 values)
-const count = 50;
-const positionsArray = new Float32Array(count * 3 * 3);
-for (let i = 0; i < count * 3 * 3; i++) {
-  positionsArray[i] = (Math.random() - 0.5) * 4;
-}
-
-// Create the attribute and name it 'position'
-const positionsAttribute = new THREE.BufferAttribute(positionsArray, 3);
-geometry.setAttribute("position", positionsAttribute);
+// Create a BoxGeometry
+const geometry = new THREE.BoxGeometry(1, 1, 1, 2, 2, 2);
 const material = new THREE.MeshBasicMaterial({
-  color: 0xff0000,
+  color: "#9c7fe3",
   wireframe: true,
 });
 const mesh = new THREE.Mesh(geometry, material);
+cubeTweaks.add(mesh.position, "y").min(-3).max(3).step(0.01).name("elevation");
+cubeTweaks.add(mesh, "visible");
+cubeTweaks.add(material, "wireframe");
+cubeTweaks.addColor(debugObject, "color").onChange(() => {
+  material.color.set(debugObject.color);
+});
+debugObject.spin = () => {
+  gsap.to(mesh.rotation, { duration: 1, y: mesh.rotation.y + Math.PI * 2 });
+};
+cubeTweaks.add(debugObject, "spin");
+debugObject.subdivision = 2;
+cubeTweaks
+  .add(debugObject, "subdivision")
+  .min(1)
+  .max(20)
+  .step(1)
+  .onFinishChange(() => {
+    mesh.geometry.dispose();
+    mesh.geometry = new THREE.BoxGeometry(
+      1,
+      1,
+      1,
+      debugObject.subdivision,
+      debugObject.subdivision,
+      debugObject.subdivision
+    );
+  });
 
 mesh.position.x = 0;
 mesh.position.y = 0;
