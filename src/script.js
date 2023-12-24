@@ -130,8 +130,8 @@ material.roughness = 0;
 // material.metalnessMap = doorMetalnessTexture;
 // material.roughnessMap = doorRoughnessTexture;
 
-// gui.add(material, "metalness").min(0).max(1).step(0.0001);
-// gui.add(material, "roughness").min(0).max(1).step(0.0001);
+gui.add(material, "metalness").min(0).max(1).step(0.0001);
+gui.add(material, "roughness").min(0).max(1).step(0.0001);
 
 // material.aoMap = doorAmbientOcclusionTexture;
 // material.aoMapIntensity = 1;
