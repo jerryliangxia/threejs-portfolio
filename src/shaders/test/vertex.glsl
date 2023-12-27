@@ -1,13 +1,10 @@
-uniform mat4 projectionMatrix;
-uniform mat4 viewMatrix;
-uniform mat4 modelMatrix;
 uniform vec2 uFrequency;
 uniform float uTime;
 
-attribute vec3 position;
-attribute vec2 uv;
-varying vec2 vUv;
+attribute float aRandom;
+
 varying float vElevation;
+varying vec2 vUv;
 
 void main()
 {
