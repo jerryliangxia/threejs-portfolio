@@ -1,7 +1,8 @@
 uniform float uTime;
-uniform float uBigWavesElevation;
-uniform vec2 uBigWavesFrequency;
-uniform float uBigWavesSpeed;
+uniform float uSmallWavesElevation;
+uniform float uSmallWavesFrequency;
+uniform float uSmallWavesSpeed;
+uniform float uSmallIterations;
 
 varying float vElevation;
 
@@ -95,10 +96,14 @@ void main()
     vec4 modelPosition = modelMatrix * vec4(position, 1.0);
 
     // Elevation
-    float elevation = sin(modelPosition.x * uBigWavesFrequency.x + uTime * uBigWavesSpeed) *
-                      sin(modelPosition.z * uBigWavesFrequency.y + uTime * uBigWavesSpeed) *
-                      uBigWavesElevation;    modelPosition.y += elevation;
-    elevation -= abs(cnoise(vec3(modelPosition.xz * 3.0, uTime * 0.2)) * 0.15);
+    float elevation = sin(modelPosition.x * uSmallWavesFrequency + uTime * uSmallWavesSpeed) *
+                      sin(modelPosition.z * uSmallWavesFrequency + uTime * uSmallWavesSpeed) *
+                      uSmallWavesElevation;
+    for(float i = 1.0; i <= uSmallIterations; i++)
+    {
+        elevation -= abs(cnoise(vec3(modelPosition.xz * uSmallWavesFrequency * i, uTime * uSmallWavesSpeed)) * uSmallWavesElevation / i);
+    }
+    modelPosition.y += elevation;
     
     vec4 viewPosition = viewMatrix * modelPosition;
 
