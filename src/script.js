@@ -33,8 +33,8 @@ const updateAllMaterials = () => {
     ) {
       child.material.envMapIntensity = 1;
       child.material.needsUpdate = true;
-      child.castShadow = true;
-      child.receiveShadow = true;
+      // child.castShadow = true;
+      // child.receiveShadow = true;
     }
   });
 };
@@ -59,9 +59,10 @@ scene.environment = environmentMap;
  */
 
 // Textures
-const mapTexture = textureLoader.load("/models/LeePerrySmith/color.jpg");
+const mapTexture = textureLoader.load("/models/LeePerrySmith/baked.jpg");
 mapTexture.colorSpace = THREE.SRGBColorSpace;
-const normalTexture = textureLoader.load("/models/LeePerrySmith/normal.jpg");
+mapTexture.flipY = false;
+// const normalTexture = textureLoader.load("/models/LeePerrySmith/normal.jpg");
 
 // Uniforms
 const customUniforms = {
@@ -71,13 +72,14 @@ const customUniforms = {
 // Material
 const material = new THREE.MeshStandardMaterial({
   map: mapTexture,
-  normalMap: normalTexture,
+  // normalMap: normalTexture,
+  // color: "blue",
 });
 
 // Depth packing
-const depthMaterial = new THREE.MeshDepthMaterial({
-  depthPacking: THREE.RGBADepthPacking,
-});
+// const depthMaterial = new THREE.MeshDepthMaterial({
+//   depthPacking: THREE.RGBADepthPacking,
+// });
 
 material.onBeforeCompile = (shader) => {
   shader.uniforms.uTime = customUniforms.uTime;
@@ -99,7 +101,7 @@ material.onBeforeCompile = (shader) => {
     `
         #include <beginnormal_vertex>
 
-        float angle = (sin(position.y + uTime * 2.0)) * 0.05;
+        float angle = (sin(position.y + uTime * 2.0)) * 0.3;
         mat2 rotateMatrix = get2dRotateMatrix(angle);
 
         objectNormal.xz = rotateMatrix * objectNormal.xz;
@@ -115,33 +117,33 @@ material.onBeforeCompile = (shader) => {
   );
 };
 
-depthMaterial.onBeforeCompile = (shader) => {
-  shader.uniforms.uTime = customUniforms.uTime;
-  shader.vertexShader = shader.vertexShader.replace(
-    "#include <common>",
-    `
-            #include <common>
+// depthMaterial.onBeforeCompile = (shader) => {
+//   shader.uniforms.uTime = customUniforms.uTime;
+//   shader.vertexShader = shader.vertexShader.replace(
+//     "#include <common>",
+//     `
+//             #include <common>
 
-            uniform float uTime;
+//             uniform float uTime;
 
-            mat2 get2dRotateMatrix(float _angle)
-            {
-                return mat2(cos(_angle), - sin(_angle), sin(_angle), cos(_angle));
-            }
-        `
-  );
-  shader.vertexShader = shader.vertexShader.replace(
-    "#include <begin_vertex>",
-    `
-            #include <begin_vertex>
+//             mat2 get2dRotateMatrix(float _angle)
+//             {
+//                 return mat2(cos(_angle), - sin(_angle), sin(_angle), cos(_angle));
+//             }
+//         `
+//   );
+//   shader.vertexShader = shader.vertexShader.replace(
+//     "#include <begin_vertex>",
+//     `
+//             #include <begin_vertex>
 
-            float angle = (sin(position.y + uTime * 2.0)) * 0.05;
-            mat2 rotateMatrix = get2dRotateMatrix(angle);
+//             float angle = (position.y + uTime) * 0.9;
+//             mat2 rotateMatrix = get2dRotateMatrix(angle);
 
-            transformed.xz = rotateMatrix * transformed.xz;
-        `
-  );
-};
+//             transformed.xz = rotateMatrix * transformed.xz;
+//         `
+//   );
+// };
 
 /**
  * Plane
@@ -158,7 +160,7 @@ scene.add(plane);
 /**
  * Models
  */
-gltfLoader.load("/models/LeePerrySmith/LeePerrySmith.glb", (gltf) => {
+gltfLoader.load("/models/LeePerrySmith/spid.glb", (gltf) => {
   // Model
   const mesh = gltf.scene.children[0];
   mesh.rotation.y = Math.PI * 0.5;
@@ -166,10 +168,10 @@ gltfLoader.load("/models/LeePerrySmith/LeePerrySmith.glb", (gltf) => {
   scene.add(mesh);
 
   // Update materials
-  updateAllMaterials();
+  // updateAllMaterials();
 
-  mesh.material = material; // Update the material
-  mesh.customDepthMaterial = depthMaterial; // Update the depth material
+  // mesh.material = material; // Update the material
+  // mesh.customDepthMaterial = depthMaterial; // Update the depth material
 
   // ...
 });
@@ -231,10 +233,10 @@ const renderer = new THREE.WebGLRenderer({
   canvas: canvas,
   antialias: true,
 });
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFShadowMap;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1;
+// renderer.shadowMap.enabled = true;
+// renderer.shadowMap.type = THREE.PCFShadowMap;
+// renderer.toneMapping = THREE.ACESFilmicToneMapping;
+// renderer.toneMappingExposure = 1;
 renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
