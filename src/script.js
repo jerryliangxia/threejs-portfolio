@@ -1,13 +1,41 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import GUI from "lil-gui";
+import { gsap } from "gsap";
+
+/**
+ * Loaders
+ */
+const loadingBarElement = document.querySelector(".loading-bar");
+const loadingManager = new THREE.LoadingManager(
+  // Loaded
+  () => {
+    window.setTimeout(() => {
+      gsap.to(overlayMaterial.uniforms.uAlpha, {
+        duration: 3,
+        value: 0,
+        delay: 1,
+      });
+
+      loadingBarElement.classList.add("ended");
+      loadingBarElement.style.transform = "";
+    }, 500);
+  },
+
+  // Progress
+  (itemUrl, itemsLoaded, itemsTotal) => {
+    const progressRatio = itemsLoaded / itemsTotal;
+    loadingBarElement.style.transform = `scaleX(${progressRatio})`;
+  }
+);
+const gltfLoader = new GLTFLoader(loadingManager);
+const cubeTextureLoader = new THREE.CubeTextureLoader(loadingManager);
 
 /**
  * Base
  */
 // Debug
-const gui = new GUI();
+const debugObject = {};
 
 // Canvas
 const canvas = document.querySelector("canvas.webgl");
@@ -16,11 +44,31 @@ const canvas = document.querySelector("canvas.webgl");
 const scene = new THREE.Scene();
 
 /**
- * Loaders
+ * Overlay
  */
-const textureLoader = new THREE.TextureLoader();
-const gltfLoader = new GLTFLoader();
-const cubeTextureLoader = new THREE.CubeTextureLoader();
+const overlayGeometry = new THREE.PlaneGeometry(2, 2, 1, 1);
+const overlayMaterial = new THREE.ShaderMaterial({
+  uniforms: {
+    uAlpha: { value: 1.0 },
+  },
+  transparent: true,
+  vertexShader: `
+      void main()
+      {
+          gl_Position = vec4(position, 1.0);
+      }
+  `,
+  fragmentShader: `
+      uniform float uAlpha;
+
+      void main()
+      {
+          gl_FragColor = vec4(0.0, 0.0, 0.0, uAlpha);
+      }
+    `,
+});
+const overlay = new THREE.Mesh(overlayGeometry, overlayMaterial);
+scene.add(overlay);
 
 /**
  * Update all materials
@@ -31,10 +79,11 @@ const updateAllMaterials = () => {
       child instanceof THREE.Mesh &&
       child.material instanceof THREE.MeshStandardMaterial
     ) {
-      child.material.envMapIntensity = 1;
+      // child.material.envMap = environmentMap
+      child.material.envMapIntensity = debugObject.envMapIntensity;
       child.material.needsUpdate = true;
-      // child.castShadow = true;
-      // child.receiveShadow = true;
+      child.castShadow = true;
+      child.receiveShadow = true;
     }
   });
 };
@@ -51,129 +100,23 @@ const environmentMap = cubeTextureLoader.load([
   "/textures/environmentMaps/0/nz.jpg",
 ]);
 
+environmentMap.colorSpace = THREE.SRGBColorSpace;
+
 scene.background = environmentMap;
 scene.environment = environmentMap;
 
-/**
- * Material
- */
-
-// Textures
-const mapTexture = textureLoader.load("/models/LeePerrySmith/baked.jpg");
-mapTexture.colorSpace = THREE.SRGBColorSpace;
-mapTexture.flipY = false;
-// const normalTexture = textureLoader.load("/models/LeePerrySmith/normal.jpg");
-
-// Uniforms
-const customUniforms = {
-  uTime: { value: 0 },
-};
-
-// Material
-const material = new THREE.MeshStandardMaterial({
-  map: mapTexture,
-  // normalMap: normalTexture,
-  // color: "blue",
-});
-
-// Depth packing
-// const depthMaterial = new THREE.MeshDepthMaterial({
-//   depthPacking: THREE.RGBADepthPacking,
-// });
-
-material.onBeforeCompile = (shader) => {
-  shader.uniforms.uTime = customUniforms.uTime;
-  shader.vertexShader = shader.vertexShader.replace(
-    "#include <common>",
-    `
-            #include <common>
-
-            uniform float uTime;
-
-            mat2 get2dRotateMatrix(float _angle)
-            {
-                return mat2(cos(_angle), - sin(_angle), sin(_angle), cos(_angle));
-            }
-        `
-  );
-  shader.vertexShader = shader.vertexShader.replace(
-    "#include <beginnormal_vertex>",
-    `
-        #include <beginnormal_vertex>
-
-        float angle = (sin(position.y + uTime * 2.0)) * 0.3;
-        mat2 rotateMatrix = get2dRotateMatrix(angle);
-
-        objectNormal.xz = rotateMatrix * objectNormal.xz;
-    `
-  );
-  shader.vertexShader = shader.vertexShader.replace(
-    "#include <begin_vertex>",
-    `
-        #include <begin_vertex>
-
-        transformed.xz = rotateMatrix * transformed.xz;
-    `
-  );
-};
-
-// depthMaterial.onBeforeCompile = (shader) => {
-//   shader.uniforms.uTime = customUniforms.uTime;
-//   shader.vertexShader = shader.vertexShader.replace(
-//     "#include <common>",
-//     `
-//             #include <common>
-
-//             uniform float uTime;
-
-//             mat2 get2dRotateMatrix(float _angle)
-//             {
-//                 return mat2(cos(_angle), - sin(_angle), sin(_angle), cos(_angle));
-//             }
-//         `
-//   );
-//   shader.vertexShader = shader.vertexShader.replace(
-//     "#include <begin_vertex>",
-//     `
-//             #include <begin_vertex>
-
-//             float angle = (position.y + uTime) * 0.9;
-//             mat2 rotateMatrix = get2dRotateMatrix(angle);
-
-//             transformed.xz = rotateMatrix * transformed.xz;
-//         `
-//   );
-// };
-
-/**
- * Plane
- */
-const plane = new THREE.Mesh(
-  new THREE.PlaneGeometry(15, 15, 15),
-  new THREE.MeshStandardMaterial()
-);
-plane.rotation.y = Math.PI;
-plane.position.y = -5;
-plane.position.z = 5;
-scene.add(plane);
+debugObject.envMapIntensity = 2.5;
 
 /**
  * Models
  */
-gltfLoader.load("/models/LeePerrySmith/spid.glb", (gltf) => {
-  // Model
-  const mesh = gltf.scene.children[0];
-  mesh.rotation.y = Math.PI * 0.5;
-  mesh.material = material;
-  scene.add(mesh);
+gltfLoader.load("/models/FlightHelmet/glTF/FlightHelmet.gltf", (gltf) => {
+  gltf.scene.scale.set(10, 10, 10);
+  gltf.scene.position.set(0, -4, 0);
+  gltf.scene.rotation.y = Math.PI * 0.5;
+  scene.add(gltf.scene);
 
-  // Update materials
-  // updateAllMaterials();
-
-  // mesh.material = material; // Update the material
-  // mesh.customDepthMaterial = depthMaterial; // Update the depth material
-
-  // ...
+  updateAllMaterials();
 });
 
 /**
@@ -181,10 +124,10 @@ gltfLoader.load("/models/LeePerrySmith/spid.glb", (gltf) => {
  */
 const directionalLight = new THREE.DirectionalLight("#ffffff", 3);
 directionalLight.castShadow = true;
-directionalLight.shadow.mapSize.set(1024, 1024);
 directionalLight.shadow.camera.far = 15;
+directionalLight.shadow.mapSize.set(1024, 1024);
 directionalLight.shadow.normalBias = 0.05;
-directionalLight.position.set(0.25, 2, -2.25);
+directionalLight.position.set(0.25, 3, -2.25);
 scene.add(directionalLight);
 
 /**
@@ -233,24 +176,17 @@ const renderer = new THREE.WebGLRenderer({
   canvas: canvas,
   antialias: true,
 });
-// renderer.shadowMap.enabled = true;
-// renderer.shadowMap.type = THREE.PCFShadowMap;
-// renderer.toneMapping = THREE.ACESFilmicToneMapping;
-// renderer.toneMappingExposure = 1;
+renderer.toneMapping = THREE.ReinhardToneMapping;
+renderer.toneMappingExposure = 3;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
 /**
  * Animate
  */
-const clock = new THREE.Clock();
-
 const tick = () => {
-  const elapsedTime = clock.getElapsedTime();
-
-  // Update material
-  customUniforms.uTime.value = elapsedTime;
-
   // Update controls
   controls.update();
 
